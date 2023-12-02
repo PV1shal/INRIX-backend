@@ -50,7 +50,6 @@ async function getToken() {
     const newToken = await refreshToken();
     return newToken;
   } else {
-    console.log(token);
     return token;
   }
 }
