@@ -1,6 +1,5 @@
 import axios from "axios";
 import tokenValidation from "./tokenValidation.js";
-import xml2j from "xml2js";
 
 export default class InrixController {
   static async getIncidents(lat, long) {
@@ -80,35 +79,20 @@ export default class InrixController {
       throw error;
     }
   }
+  static async convertToPairs(array) {
+    const pairs = [];
+    for (let i = 0; i < array.length; i += 2) {
+      const lat = parseFloat(array[i]);
+      const lon = parseFloat(array[i + 1]);
+      pairs.push([lat, lon]);
+    }
+    return pairs;
+  };
 
-  static async pointInPoly(poly, pt) {
-    const x = pt[0];
-    const y = pt[1];
-
-    const convertToPairs = (array) => {
-      const pairs = [];
-      for (let i = 0; i < array.length; i += 2) {
-        const lat = parseFloat(array[i]);
-        const lon = parseFloat(array[i + 1]);
-        pairs.push([lat, lon]);
-      }
-      return pairs;
-    };
-
-    const polyBorder = await new Promise((resolve, reject) => {
-      xml2j.parseString(poly.data, (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          const posList =
-            result.Inrix.Polygons[0].DriveTime[0].Polygon[0].exterior[0]
-              .LinearRing[0].posList[0];
-          const postList = posList.split(" ");
-          resolve(convertToPairs(postList));
-        }
-      });
-    });
-
+  static async pointInPoly(polyBorder, lat, long) {
+    const x = lat;
+    const y = long;
+    
     var inside = false;
 
     for (let i = 0, j = polyBorder.length - 1; i < polyBorder.length; j = i++) {
@@ -125,7 +109,7 @@ export default class InrixController {
     return inside;
   }
 
-  static async getDriveTimePoly(lat, long) {
+  static async getDriveTimePoly(lat, long, commuteTime) {
     try {
       const token = await tokenValidation.getToken();
       const driveTimePoly = await axios.get(
@@ -134,14 +118,15 @@ export default class InrixController {
           params: {
             center: "37.754341|-122.482207",
             rangeType: "D",
-            duration: "30",
+            duration: commuteTime,
           },
           headers: {
             Authorization: "Bearer " + token,
           },
         }
       );
-      return this.pointInPoly(driveTimePoly, [lat, long]);
+      return driveTimePoly;
+      // return this.pointInPoly(driveTimePoly, [lat, long]);
     } catch (error) {
       console.log(error.response);
       throw error;

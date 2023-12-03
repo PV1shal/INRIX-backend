@@ -1,5 +1,7 @@
 import InrixController from "./inrixController.js";
 import { getPropertiesByAddress } from "./zillowController.js";
+import xml2j from "xml2js";
+
 
 export default class FindListings {
   static async getListings(req, res) {
@@ -14,6 +16,7 @@ export default class FindListings {
     //   preferredTime: '',
     //   destination: ''
     // }
+    console.log(req.body);
     const lat = req.body.lat;
     const long = req.body.long;
     const noisePreference = req.body.preferences.noise;
@@ -42,7 +45,39 @@ export default class FindListings {
       preferredTime
     );
 
+    // Filter all properties based on address
     const properties = await getPropertiesByAddress(address);
+    
+    if (commuteSelection) {
+      const poly = await InrixController.getDriveTimePoly(workAddress[0], workAddress[1], preferredTime);
+      const polyBorder = await new Promise((resolve, reject) => {
+        xml2j.parseString(poly.data, (err, result) => {
+          if (err) {
+            reject(err);
+          } else {
+            const posList =
+              result.Inrix.Polygons[0].DriveTime[0].Polygon[0].exterior[0]
+                .LinearRing[0].posList[0];
+            const postList = posList.split(" ");
+            resolve(InrixController.convertToPairs(postList));
+          }
+        });
+      });
+      for (let i = 0; i < properties.results.length; i++) {
+        if (!InrixController.pointInPoly(polyBorder, properties.results[i].latitude, properties.results[i].longitude)) {
+          properties.results.splice(i, 1);
+        };
+      };
+    }
+    console.log(properties);
+    // Generate filtered data based on user's parameters
+    const filteredData = properties.results.filter(property => {
+      return property.maxPrice <= maxPrice && 
+      property.bathPref > bathPref && 
+      property.bedPref > bedPref;
+    });
+
+    console.log(filteredData);
 
     // const incidents = await InrixController.getIncidents(lat, long);
     // var numIncidents = incidents.result.incidents.length;
