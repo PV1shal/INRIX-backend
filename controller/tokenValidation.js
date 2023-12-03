@@ -31,7 +31,7 @@ async function refreshToken() {
 }
 
 function isTokenExpired(token) {
-  if (!token || token === "undefined") {
+  if (!token) {
     return true;
   }
   const expiry = localStorage.getItem("expiry");

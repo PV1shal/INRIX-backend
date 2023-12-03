@@ -11,6 +11,6 @@ export default class FindListings {
     console.log(parkingLots);
     res.status(200).json({parkingLots});
 
-    
+    const driveTimePoly = await InrixController.getDriveTimePoly(lat, long);
   }
 }
