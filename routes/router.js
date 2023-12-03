@@ -1,6 +1,7 @@
 import express from "express";
 import tokenValidation from "../controller/tokenValidation.js";
 import FindListings from "../controller/findListings.js";
+import { searchProperties, nearbySchools } from "../controller/zillowController.js";
 
 const router = express.Router();
 
@@ -9,6 +10,9 @@ router.get("/", (req, res) => {
 });
 
 router.route("/getListings").get(FindListings.getListings);
+
+router.get('/searchProperties', searchProperties);
+router.get('/nearbySchools', nearbySchools);
 
 router.get("/getToken", (req, res) => {
   res.send(tokenValidation.getToken());
