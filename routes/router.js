@@ -9,9 +9,9 @@ router.get("/", (req, res) => {
   res.send("Welcome to the Inrix API");
 });
 
-router.route("/getListings").get(FindListings.getListings);
+router.route("/getListings").post(FindListings.getListings);
 
-router.get('/searchProperties', searchProperties);
+router.post("/searchProperties", searchProperties);
 router.get('/nearbySchools', nearbySchools);
 
 router.get("/getToken", (req, res) => {
